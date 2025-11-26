@@ -31,17 +31,31 @@ jobs:
             }
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Trigger ${{ matrix.stack.name }}
         env:
           WEBHOOK: ${{ secrets[matrix.stack.secret] }}
-          ADDED: ${{ join(github.event.commits.*.added, ' ') }}
-          MOD: ${{ join(github.event.commits.*.modified, ' ') }}
-          REM: ${{ join(github.event.commits.*.removed, ' ') }}
-        if: >
-          env.WEBHOOK != '' && (
-            contains(env.ADDED, matrix.stack.path) ||
-            contains(env.MOD, matrix.stack.path) ||
-            contains(env.REM, matrix.stack.path)
-          )
-        run: curl -fsS -X POST "$WEBHOOK"
+          STACK_PATH: ${{ matrix.stack.path }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK}" ]; then
+            echo "No webhook secret set; skipping."
+            exit 0
+          fi
+
+          if [ -n "${BEFORE}" ] && ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "${BEFORE}" --depth=1
+          fi
+
+          changed=$(git diff --name-only "${BEFORE:-${SHA}^}" "${SHA}" || true)
+
+          if ! printf '%s\n' "${changed}" | grep -q "${STACK_PATH}"; then
+            echo "No changes for ${STACK_PATH}; skipping."
+            exit 0
+          fi
+
+          curl -fsS -X POST "${WEBHOOK}"
