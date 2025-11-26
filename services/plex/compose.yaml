@@ -1,0 +1,33 @@
+networks:
+  cloudflared:
+    external: true
+  app_network:
+    external: true
+
+services:
+  plex:
+    container_name: plex
+    image: lscr.io/linuxserver/plex:latest
+    restart: unless-stopped
+    ports:
+      - 32400:32400/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - TZ=America/Vancouver
+      - VERSION=docker
+
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /srv/data/media:/data/media
+      - /srv/data/projects/docker/plex:/config
+      - /dev/null:/dev/bus/usb # Hide USB access
+    networks:
+      - cloudflared
+      - app_network
