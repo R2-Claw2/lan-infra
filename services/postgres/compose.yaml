@@ -6,7 +6,7 @@ volumes:
   postgres_data:
     external: true
     name: postgres_postgres_data
-  pgadmin_data:
+  pgadmin-data:
     external: true
     name: postgres_pgadmin-data
 
