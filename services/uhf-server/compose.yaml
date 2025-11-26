@@ -1,0 +1,25 @@
+networks:
+  cloudflared:
+    external: true
+  app_network:
+    external: true
+volumes:
+  uhf-server-data:
+
+services:
+  uhf-server:
+    image: swapplications/uhf-server:1.5.1
+    container_name: uhf-server
+    ports:
+      - ${PORT}:${PORT}
+    volumes:
+      - /srv/data/media/tv/iptv:/recordings
+      - uhf-server-data:/var/lib/uhf-server
+    env_file:
+      - .env
+    command: uhf-server --port ${PORT} --recordings-dir /recordings --password ${PASSWORD}
+    stop_grace_period: 30s
+    networks:
+      - cloudflared
+      - app_network
+
