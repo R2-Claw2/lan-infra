@@ -1,0 +1,34 @@
+networks:
+  app_network:
+    external: true
+
+volumes:
+  redis_data:
+
+services:
+  redis:
+    # Using Valkey (Redis fork) - specific, tagged alpine image is good practice
+    image: docker.io/valkey/valkey:8.0.1-alpine
+    container_name: redis_cache
+    restart: unless-stopped
+    networks:
+      - app_network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # Saves DB every 60 seconds if at least 1 key changed. Adjust if needed.
+    command: "valkey-server --save 60 1"
+    healthcheck:
+      # Checks if the server responds to PING. $$() is needed to escape $ for Compose.
+      test: "[ $$(valkey-cli ping) = 'PONG' ]"
+      start_period: 5s # Allow time for startup before first check
+      interval: 2s # Check more frequently during startup/initial phase
+      timeout: 3s
+      retries: 5
+    # Configure log rotation to prevent excessive disk usage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m" # Increased slightly, 1m can be small
+        max-file: "3" # Keep a few rotated files
