@@ -5,4 +5,5 @@
       restart: unless-stopped
       ports:
         - "22222:80"
-
+      environment:
+        - MESSAGE=hello from lan-infra
