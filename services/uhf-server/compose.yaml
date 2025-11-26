@@ -14,11 +14,10 @@ services:
       - 63890:63890
     environment:
       - PASSWORD=${PASSWORD}
-      - PORT=63890
     volumes:
       - /srv/data/media/tv/iptv:/recordings
       - uhf-server-data:/var/lib/uhf-server
-    command: uhf-server --port ${PORT} --recordings-dir /recordings --password ${PASSWORD}
+    command: uhf-server --port 63890 --recordings-dir /recordings --password ${PASSWORD}
     stop_grace_period: 30s
     networks:
       - cloudflared
