@@ -11,7 +11,10 @@ services:
     image: swapplications/uhf-server:1.5.1
     container_name: uhf-server
     ports:
-      - ${PORT}:${PORT}
+      - 63890:63890
+    environment:
+      - PASSWORD=${PASSWORD}
+      - PORT=63890
     volumes:
       - /srv/data/media/tv/iptv:/recordings
       - uhf-server-data:/var/lib/uhf-server
