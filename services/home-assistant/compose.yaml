@@ -1,6 +1,10 @@
 volumes:
   music-assistant-server-data:
+    external: true
+    name: home-assistant_music-assistant-server-data
   homeassistant-data:
+    external: true
+    name: home-assistant_homeassistant-data
 
 networks:
   homeassistant:
