@@ -6,6 +6,7 @@ on:
     paths:
       - "services/**"
       - "apps/**"
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -40,10 +41,11 @@ jobs:
           STACK_PATH: ${{ matrix.stack.path }}
           BEFORE: ${{ github.event.before }}
           SHA: ${{ github.sha }}
+          SECRET_NAME: ${{ matrix.stack.secret }}
         run: |
           set -euo pipefail
           if [ -z "${WEBHOOK}" ]; then
-            echo "No webhook secret set; skipping."
+            echo "No webhook secret set for ${STACK_PATH} (secret ${SECRET_NAME}); skipping."
             exit 0
           fi
 
@@ -58,4 +60,5 @@ jobs:
             exit 0
           fi
 
+          echo "Triggering webhook for ${STACK_PATH} (secret ${SECRET_NAME})"
           curl -fsS -X POST "${WEBHOOK}"
