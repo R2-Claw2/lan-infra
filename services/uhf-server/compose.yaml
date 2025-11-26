@@ -15,11 +15,8 @@ services:
     volumes:
       - /srv/data/media/tv/iptv:/recordings
       - uhf-server-data:/var/lib/uhf-server
-    env_file:
-      - .env
     command: uhf-server --port ${PORT} --recordings-dir /recordings --password ${PASSWORD}
     stop_grace_period: 30s
     networks:
       - cloudflared
       - app_network
-
