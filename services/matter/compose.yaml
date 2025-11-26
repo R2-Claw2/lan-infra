@@ -1,0 +1,17 @@
+volumes:
+  matter-data:
+
+networks:
+  homeassistant:
+    name: homeassistant
+    external: true
+
+services:
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: matter-server
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - matter-data:/data
+
