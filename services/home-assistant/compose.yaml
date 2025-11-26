@@ -36,8 +36,6 @@ services:
     #image: ghcr.io/music-assistant/server:latest
     image: ghcr.io/music-assistant/server:beta
     container_name: music-assistant-server
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
     restart: unless-stopped
     # Network mode must be set to host for MA to work correctly
     network_mode: host
@@ -50,4 +48,3 @@ services:
       - apparmor:unconfined
     environment:
       - LOG_LEVEL=info
-
