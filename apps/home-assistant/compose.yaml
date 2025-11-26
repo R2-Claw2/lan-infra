@@ -1,0 +1,49 @@
+volumes:
+  music-assistant-server-data:
+  homeassistant-data:
+
+networks:
+  homeassistant:
+    name: homeassistant
+  cloudflared:
+    external: true
+  app_network:
+    external: true
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - homeassistant-data:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    environment:
+      - TZ=America/Vancouver
+        # not used when network mode is host ports:
+        #- 8095:8095
+    privileged: true
+    network_mode: host
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+
+  music-assistant-server:
+    #image: ghcr.io/music-assistant/server:latest
+    image: ghcr.io/music-assistant/server:beta
+    container_name: music-assistant-server
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    restart: unless-stopped
+    # Network mode must be set to host for MA to work correctly
+    network_mode: host
+    volumes:
+      - music-assistant-server-data:/data/
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      - LOG_LEVEL=info
+
