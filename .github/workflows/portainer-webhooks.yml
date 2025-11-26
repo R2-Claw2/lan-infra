@@ -1,0 +1,47 @@
+name: Portainer deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/**"
+      - "apps/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack:
+          # Add more stacks by extending this list with {name, path, secret}
+          - {
+              name: cloudflared,
+              path: "services/cloudflared/",
+              secret: "PORTAINER_WEBHOOK_CLOUDFLARED",
+            }
+          - {
+              name: hello,
+              path: "services/hello/",
+              secret: "PORTAINER_WEBHOOK_HELLO",
+            }
+          - {
+              name: open-webui,
+              path: "apps/open-webui/",
+              secret: "PORTAINER_WEBHOOK_OPEN_WEBUI",
+            }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger ${{ matrix.stack.name }}
+        env:
+          WEBHOOK: ${{ secrets[matrix.stack.secret] }}
+          ADDED: ${{ join(github.event.commits.*.added, ' ') }}
+          MOD: ${{ join(github.event.commits.*.modified, ' ') }}
+          REM: ${{ join(github.event.commits.*.removed, ' ') }}
+        if: >
+          env.WEBHOOK != '' && (
+            contains(env.ADDED, matrix.stack.path) ||
+            contains(env.MOD, matrix.stack.path) ||
+            contains(env.REM, matrix.stack.path)
+          )
+        run: curl -fsS -X POST "$WEBHOOK"
