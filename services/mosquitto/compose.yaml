@@ -1,0 +1,22 @@
+volumes:
+  mosquito-data:
+
+networks:
+  homeassistant:
+    name: homeassistant
+    external: true
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - 1883:1883
+      - 9011:9001
+    volumes:
+      - mosquito-data:/mosquitto
+      - mosquito-data:/mosquitto/data
+      - mosquito-data:/mosquitto/log
+    networks:
+      - homeassistant
