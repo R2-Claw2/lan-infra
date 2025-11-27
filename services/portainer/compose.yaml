@@ -1,0 +1,25 @@
+networks:
+  app_network:
+    external: true
+  cloudflared:
+    external: true
+
+volumes:
+  portainer_data:
+    external: true
+    name: portainer_data
+
+services:
+  portainer:
+    image: portainer/portainer-ce:lts
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - app_network
+      - cloudflared
