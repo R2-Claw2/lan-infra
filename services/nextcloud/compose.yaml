@@ -1,0 +1,46 @@
+networks:
+  app_network:
+    external: true
+  cloudflared:
+    external: true
+
+services:
+  nextcloud:
+    image: nextcloud:32-apache
+    container_name: nextcloud
+    restart: unless-stopped
+    networks:
+      - app_network # reach postgres_db & redis_cache
+      - cloudflared # so cloudflared can proxy to http://nextcloud:80
+    ports:
+      - "8181:80"
+    environment:
+      # Postgres (set in Portainer)
+      POSTGRES_HOST: ${NC_POSTGRES_HOST}
+      POSTGRES_DB: ${NC_POSTGRES_DB}
+      POSTGRES_USER: ${NC_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${NC_POSTGRES_PASSWORD}
+      # Redis
+      REDIS_HOST: redis_cache
+      # Reverse proxy
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NC_TRUSTED_DOMAINS}
+      OVERWRITEHOST: ${NC_OVERWRITE_HOST}
+      OVERWRITEPROTOCOL: https
+      TRUSTED_PROXIES: ${NC_TRUSTED_PROXIES}
+      # QoL
+      PHP_MEMORY_LIMIT: 1024M
+      PHP_UPLOAD_LIMIT: 16G
+      NEXTCLOUD_MAX_TIME: 3600
+      # occ hook values
+      NC_OVERWRITE_CLI_URL: ${NC_OVERWRITE_CLI_URL}
+      NC_FORWARD_FOR_HEADERS: HTTP_X_FORWARDED_FOR
+      NC_DISABLE_BRUTEFORCE: "true"
+
+    volumes:
+      - /srv/data/projects/docker-volumes/nextcloud/html:/var/www/html
+      - /srv/data/projects/docker-volumes/nextcloud/custom_apps:/var/www/html/custom_apps
+      - /srv/data/projects/docker-volumes/nextcloud/config:/var/www/html/config
+      - /srv/data/projects/docker-volumes/nextcloud/data:/var/www/html/data
+      - /srv/data/media:/media-host
+      - /srv/data/backups/angela-alvarez/gdrive/onedrive:/angela-onedrive
+      - /srv/data/projects/docker-volumes/nextcloud/hooks/before-starting:/docker-entrypoint-hooks.d/before-starting:ro
