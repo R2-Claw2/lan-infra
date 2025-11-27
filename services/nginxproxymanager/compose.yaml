@@ -5,7 +5,7 @@ networks:
 volumes:
   nginxproxymanager-data:
     external: true
-    name: nginxproxymanager_data
+    name: nginxproxymanager_nginxproxymanager-data
 
 services:
   app:
