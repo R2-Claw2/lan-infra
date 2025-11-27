@@ -1,0 +1,167 @@
+# General LiteLLM Proxy settings
+litellm_settings:
+  telemetry: false # Optional: Disable telemetry reporting to LiteLLM authors
+  # Optional: Define a master key for proxy authentication (reads from .env)
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # Optional: Specify allowed origins for CORS (replace * with specific domains for production)
+  # allowed_origins:
+  #   - "http://localhost:3000"
+  #   - "https://my-frontend-app.com"
+  #drop_params: False
+  drop_params: true
+  cache: true # set cache responses to True, litellm defaults to using a redis cache
+  cache_params: # set cache params for redis
+    type: redis
+    namespace: "litellm.caching.caching"
+  #allow the guard to *rewrite* bad values
+  modify_params: true #    [oai_citation:1‡LiteLLM](https://docs.litellm.ai/docs/providers/bedrock?utm_source=chatgpt.com)
+
+router_settings: # ① turn the guard-rail on
+  enable_pre_call_checks: true #    [oai_citation:0‡LiteLLM](https://docs.litellm.ai/docs/routing?utm_source=chatgpt.com)
+
+general_settings:
+  user_header_name: "X-OpenWebUI-User-Email"
+  store_model_in_db: false
+  store_prompts_in_spend_logs: true
+  disable_adding_master_key_hash_to_db:
+    true
+    #maximum_spend_logs_retention_period: "7d"  # Delete logs older than 7 days
+    #maximum_spend_logs_retention_interval: "1d"  # Run once per day
+
+# Define the models the proxy will expose
+model_list:
+  ################
+  # local models #
+  ################
+  - model_name: local/acon96/home-llama-3.2-3b
+    litellm_params:
+      model: openai/home-llama-3.2-3b
+      api_base: os.environ/LOCAL_API_BASE
+      api_key: none
+
+  - model_name: local/mlx-community/meta-llama-3.1-8b-instruct
+    litellm_params:
+      model: openai/mlx-community/meta-llama-3.1-8b-instruct
+      api_base: os.environ/LOCAL_API_BASE
+      api_key: none
+
+  #################
+  # remote models #
+  #################
+  - model_name: openai/gpt-5.1 # How users will call this model via the proxy
+    litellm_params: # Parameters for LiteLLM to connect to the backend
+      model: openai/gpt-5.1 # The actual model name LiteLLM uses (provider/model)
+      api_key: os.environ/OPENAI_API_KEY # Read the key from the environment variable
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  # nano banana
+  - model_name: google/gemini-3-pro-image-preview
+    litellm_params:
+      model: gemini/gemini-3-pro-image-preview
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: google/gemini-3-pro-preview
+    litellm_params:
+      model: gemini/gemini-3-pro-preview
+      api_key: os.environ/GEMINI_API_KEY
+      tools:
+        - googleSearch: {}
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: google/gemini-2.0-flash
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: os.environ/GEMINI_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: google/gemini-2.0-flash-lite
+    litellm_params:
+      model: gemini/gemini-2.0-flash-lite
+      api_key: os.environ/GEMINI_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: google/gemini-2.5-flash
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: google/gemini-2.5-flash-with-search
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+      tools:
+        - googleSearch: {}
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: google/text-embedding
+    litellm_params:
+      model: gemini/text-embedding-004
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: google/gemma-3-4b-it
+    litellm_params:
+      model: gemini/gemma-3-4b-it
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: deepseek/deepseek-chat
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: deepseek/deepseek-reasoner
+    litellm_params:
+      model: deepseek/deepseek-reasoner
+      api_key: os.environ/DEEPSEEK_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+
+  - model_name: samba/meta-llama-3.3-70b-instruct
+    litellm_params:
+      model: sambanova/Meta-Llama-3.3-70B-Instruct
+      api_key: os.environ/SAMBANOVA_API_KEY
+      cache_control_injection_points:
+        - location: message
+          role: system
+    model_info:
+      context_window:
+        131072
+        #max_completion_tokens: 16384
+      max_tokens: 16384
+
+  - model_name: groq/meta-llama/llama-4-scout-17b-16e-instruct
+    litellm_params:
+      model: groq/meta-llama/llama-4-scout-17b-16e-instruct
+      api_key: os.environ/GROQ_API_KEY
+    model_info:
+      context_window: 131072
+      max_tokens: 8192
+
+  - model_name: openrouter/qwen/qwen3-coder
+    litellm_params:
+      model: openrouter/qwen/qwen3-coder
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: perplexity/searchpro
+    litellm_params:
+      model: perplexity/sonar-pro
+      api_key: os.environ/PERPLEXITYAI_API_KEY
+      allowed_openai_params: ["web_search_options"]
+      web_search_options:
+        search_context_size: "medium"
