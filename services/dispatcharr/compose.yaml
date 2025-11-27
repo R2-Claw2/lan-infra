@@ -1,0 +1,75 @@
+volumes:
+  dispatcharr_data:
+    external: true
+    name: dispatcharr_dispatcharr_data
+
+services:
+  nordvpn:
+    image: qmcgaw/gluetun
+    container_name: nordvpn
+    hostname: nordvpn
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      VPN_SERVICE_PROVIDER: nordvpn
+      VPN_TYPE: wireguard
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}
+      SERVER_COUNTRIES: ${SERVER_COUNTRIES}
+      TZ: ${TZ}
+      DNS: ${DNS}
+      EXTRA_SUBNETS: ${EXTRA_SUBNETS}
+      FIREWALL_OUTBOUND_SUBNETS: ${FIREWALL_OUTBOUND_SUBNETS}
+    ports:
+      - "8889:8889"
+      - "6887:6887/tcp"
+      - "6887:6887/udp"
+      - "8888:8888/tcp"
+      - "9191:9191"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  web:
+    image: nginx
+    container_name: web
+    network_mode: "service:nordvpn"
+    restart: unless-stopped
+    depends_on:
+      - nordvpn
+
+  dispatcharr:
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    container_name: dispatcharr
+    restart: unless-stopped
+    network_mode: "service:nordvpn"
+    depends_on:
+      - nordvpn
+    volumes:
+      - dispatcharr_data:/data
+    environment:
+      - DISPATCHARR_ENV=aio
+      - REDIS_HOST=localhost
+      - CELERY_BROKER_URL=redis://localhost:6379/0
+      - DISPATCHARR_LOG_LEVEL=info
+
+  torrent:
+    image: ghcr.io/linuxserver/qbittorrent
+    network_mode: "service:nordvpn"
+    restart: unless-stopped
+    depends_on:
+      - nordvpn
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      WEBUI_PORT: ${WEBUI_PORT}
+      TORRENTING_PORT: ${TORRENTING_PORT}
+    security_opt:
+        - seccomp:unconfined
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /srv/data/projects/docker/qbittorrent:/config
+      - /srv/data/downloads/torrents:/downloads
