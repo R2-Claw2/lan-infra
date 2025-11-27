@@ -4,6 +4,8 @@ networks:
 
 volumes:
   mosquito-data:
+    external: true
+    name: mosquitto_mosquito-data
 
 services:
   mosquitto:
