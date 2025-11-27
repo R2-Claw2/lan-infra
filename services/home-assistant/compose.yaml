@@ -28,9 +28,6 @@ services:
         # not used when network mode is host ports:
         #- 8095:8095
     privileged: true
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
     network_mode: host
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
