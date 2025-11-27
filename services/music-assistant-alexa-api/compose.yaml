@@ -6,7 +6,6 @@ networks:
 
 services:
   music-assistant-alexa-api:
-    build: .
     container_name: music-assistant-alexa-api
     image: ghcr.io/alams154/music-assistant-alexa-api:latest
     restart: unless-stopped
