@@ -7,8 +7,8 @@ services:
     image: ghcr.io/berriai/litellm:main-stable
     restart: unless-stopped
     volumes:
-      - ./config/:/app/config/
-    command: ["--config", "/app/config/config.yaml", "--port", "4000"]
+      - /srv/data/projects/infra/services/litellm/config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
     ports:
       - "4000:4000"
     environment:
