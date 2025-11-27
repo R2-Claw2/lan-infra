@@ -1,10 +1,9 @@
+networks:
+  app_network:
+    external: true
+
 volumes:
   mosquito-data:
-
-networks:
-  homeassistant:
-    name: homeassistant
-    external: true
 
 services:
   mosquitto:
@@ -19,4 +18,4 @@ services:
       - mosquito-data:/mosquitto/data
       - mosquito-data:/mosquitto/log
     networks:
-      - homeassistant
+      - app_network
