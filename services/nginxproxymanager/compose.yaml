@@ -1,0 +1,26 @@
+networks:
+  app_network:
+    external: true
+
+volumes:
+  nginxproxymanager-data:
+    external: true
+    name: nginxproxymanager_data
+
+services:
+  app:
+    image: "jc21/nginx-proxy-manager:latest"
+    restart: unless-stopped
+    ports:
+      - "80:80" # Public HTTP Port
+      - "443:443" # Public HTTPS Port
+      - "81:81" # Admin Web Port
+    volumes:
+      - nginxproxymanager-data:/data
+      - nginxproxymanager-data:/etc/letsencrypt
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "/usr/bin/check-health"]
+      interval: 10s
+      timeout: 3s
