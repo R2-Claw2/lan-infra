@@ -49,7 +49,7 @@ services:
       - nordvpn
     volumes:
       - dispatcharr_data:/data
-      - /srv/data/media/tv/iptv:/recordings/TV_Shows
+      - /srv/data/media/tv/iptv:/data/recordings/TV_Shows
     environment:
       - DISPATCHARR_ENV=aio
       - REDIS_HOST=localhost
