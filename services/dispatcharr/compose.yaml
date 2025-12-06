@@ -31,7 +31,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /srv/data/media/tv/iptv:/recordings/TV_Shows
 
   web:
     image: nginx
@@ -50,6 +49,7 @@ services:
       - nordvpn
     volumes:
       - dispatcharr_data:/data
+      - /srv/data/media/tv/iptv:/recordings/TV_Shows
     environment:
       - DISPATCHARR_ENV=aio
       - REDIS_HOST=localhost
