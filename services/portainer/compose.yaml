@@ -11,7 +11,7 @@ volumes:
 
 services:
   portainer:
-    image: portainer/portainer-ee:2.33.5
+    image: portainer/portainer-ee:2.33.6
     container_name: portainer
     restart: unless-stopped
     ports:
