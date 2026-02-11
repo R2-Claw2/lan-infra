@@ -13,9 +13,8 @@ services:
     environment:
       MODE: json-rpc # supported: json-rpc, native, normal
     ports:
-      - "8080:7583"
+      - "7583:8080"
     volumes:
       - signal-cli-config:/home/.local/share/signal-cli
     networks:
       - app_network
-
