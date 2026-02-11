@@ -1,0 +1,21 @@
+networks:
+  app_network:
+    external: true
+
+volumes:
+  signal-cli-config:
+    name: signal-cli-rest
+
+services:
+  signal-cli-rest-api:
+    image: bbernhard/signal-cli-rest-api:latest
+    restart: unless-stopped
+    environment:
+      MODE: json-rpc # supported: json-rpc, native, normal
+    ports:
+      - "8080:7583"
+    volumes:
+      - signal-cli-config:/home/.local/share/signal-cli
+    networks:
+      - app_network
+
