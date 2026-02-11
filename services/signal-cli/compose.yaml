@@ -12,7 +12,7 @@ services:
     command: daemon --http 0.0.0.0:7583
     restart: unless-stopped
     ports:
-      - "127.0.0.1:17583:7583"
+      - "17583:7583"
     volumes:
       - signal-cli-config:/var/lib/signal-cli
     tmpfs:
