@@ -4,8 +4,7 @@
   "enabledManagers": ["docker-compose"],
   "docker-compose": {
     "fileMatch": [
-      "(^|/)services/.+/compose\\.ya?ml$",
-      "(^|/)apps/.+/compose\\.ya?ml$"
+      "(^|/)(services|apps)(/.+)?/compose\\.ya?ml$"
     ]
   },
   "labels": ["dependencies", "docker"],
