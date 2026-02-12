@@ -7,7 +7,7 @@ networks:
 services:
   music-assistant-alexa-api:
     container_name: music-assistant-alexa-api
-    image: ghcr.io/alams154/music-assistant-alexa-api:latest
+    image: ghcr.io/alams154/music-assistant-alexa-api:latest@sha256:665129898ef6cb0bedb89bda6ed262cd59cca70f4897b5968132aef1f402fbbd
     restart: unless-stopped
     ports:
       - 3300:3000

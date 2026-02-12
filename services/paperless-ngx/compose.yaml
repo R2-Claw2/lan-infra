@@ -12,14 +12,14 @@ volumes:
 
 services:
   broker:
-    image: docker.io/library/redis:8
+    image: docker.io/library/redis:8@sha256:43355efd22490e31ca14b9d569367d05121e2be61fd8e47937563ae2a80952ae
     restart: unless-stopped
     volumes:
       - redisdata_paperless:/data
     networks:
       - app_network
   db:
-    image: docker.io/library/postgres:17
+    image: docker.io/library/postgres:17@sha256:ecebd237d9aaf83112427807848bc41ba6bd4df8a2f6936e09f7db1813609625
     restart: unless-stopped
     volumes:
       - pgdata_paperless:/var/lib/postgresql/data
@@ -30,7 +30,7 @@ services:
     networks:
       - app_network
   paperless-web:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest@sha256:665f2f5cc5482ea2e44f90a7fa170908aaeb95d8d3c70e17f746de8fcb81f644
     restart: unless-stopped
     depends_on:
       - db
@@ -61,7 +61,7 @@ services:
     networks:
       - app_network
   gotenberg:
-    image: docker.io/gotenberg/gotenberg:8.20
+    image: docker.io/gotenberg/gotenberg:8.20@sha256:cda4386c7ed38f18bc6897828be01ba7361c99929a5c84ec5e293d7916e29bac
     restart: unless-stopped
     # The gotenberg chromium route is used to convert .eml files. We do not
     # want to allow external content like tracking pixels or even javascript.
@@ -72,7 +72,7 @@ services:
     networks:
       - app_network
   tika:
-    image: docker.io/apache/tika:latest
+    image: docker.io/apache/tika:latest@sha256:c0154cb95587cde64be74f35ada1a2bd7892219f3f0ac3c9dc6cab34046b3573
     restart: unless-stopped
     networks:
       - app_network

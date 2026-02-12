@@ -1,6 +1,6 @@
   services:
     hello:
-      image: nginxdemos/hello:plain-text
+      image: nginxdemos/hello:plain-text@sha256:751bf8933179b086091927eefd952f46b19ba37fa22d47e88da1c0c9921cbc8e
       container_name: hello
       restart: unless-stopped
       ports:

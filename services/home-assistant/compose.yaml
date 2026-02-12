@@ -17,7 +17,7 @@ networks:
 services:
   homeassistant:
     container_name: homeassistant
-    image: "ghcr.io/home-assistant/home-assistant:stable"
+    image: "ghcr.io/home-assistant/home-assistant:stable@sha256:043ab74ba0ad529734d7d77ca3e893f286410864619329d5e8ca0524c3d260c1"
     volumes:
       - homeassistant-data:/config
       - /etc/localtime:/etc/localtime:ro
@@ -34,7 +34,7 @@ services:
 
   music-assistant-server:
     #image: ghcr.io/music-assistant/server:latest
-    image: ghcr.io/music-assistant/server:beta
+    image: ghcr.io/music-assistant/server:beta@sha256:72f6e2fc2a98721c657806caa55905d2e32df6d889c7a9364bfef1b62087a16d
     container_name: music-assistant-server
     restart: unless-stopped
     # Network mode must be set to host for MA to work correctly
