@@ -5,7 +5,7 @@ volumes:
 
 services:
   nordvpn:
-    image: qmcgaw/gluetun
+    image: qmcgaw/gluetun@sha256:7b1dafa3d25cfd891deae52c7973c499f619f7d8eac52fad84f9aa1e5e6e01ca
     container_name: nordvpn
     hostname: nordvpn
     restart: unless-stopped
@@ -33,7 +33,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   web:
-    image: nginx
+    image: nginx@sha256:c881927c4077710ac4b1da63b83aa163937fb47457950c267d92f7e4dedf4aec
     container_name: web
     network_mode: "service:nordvpn"
     restart: unless-stopped
@@ -58,7 +58,7 @@ services:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 
   torrent:
-    image: ghcr.io/linuxserver/qbittorrent
+    image: ghcr.io/linuxserver/qbittorrent@sha256:95114034a7f74672b76f795f6938921b0ca795f85b59b48691035dc66714f34c
     network_mode: "service:nordvpn"
     restart: unless-stopped
     depends_on:

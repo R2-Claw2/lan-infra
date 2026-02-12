@@ -11,7 +11,7 @@ volumes:
 
 services:
   portainer:
-    image: portainer/portainer-ee:2.33.7
+    image: portainer/portainer-ee:2.33.7@sha256:d9ca585c2b0aa0636f3c734f6c07bd39f170059023ccbc1a725d9f2f804ddc22
     container_name: portainer
     restart: unless-stopped
     ports:

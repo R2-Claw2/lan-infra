@@ -8,7 +8,7 @@ volumes:
 services:
   redis:
     # Using Valkey (Redis fork) - specific, tagged alpine image is good practice
-    image: docker.io/valkey/valkey:8.0.1-alpine
+    image: docker.io/valkey/valkey:8.0.1-alpine@sha256:75010b6854cb5ba6a0b1540d1bd3238541a31e3f8018cd31f9e5b92bb3192fa6
     container_name: redis_cache
     restart: unless-stopped
     networks:

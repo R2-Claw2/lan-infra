@@ -8,7 +8,7 @@ volumes:
 
 services:
   signal-cli-rest-api:
-    image: bbernhard/signal-cli-rest-api:latest
+    image: bbernhard/signal-cli-rest-api:latest@sha256:5fcb8e8620f20f944d747627841ca97f19104acb3e1adb1d5c8983b5db422529
     restart: unless-stopped
     environment:
       MODE: json-rpc # supported: json-rpc, native, normal

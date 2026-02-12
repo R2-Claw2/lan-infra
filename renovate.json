@@ -33,6 +33,12 @@
       ],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Keep Portainer on 2.33 LTS line while still allowing digest updates",
+      "matchManagers": ["docker-compose"],
+      "matchPackageNames": ["portainer/portainer-ee"],
+      "allowedVersions": "/^2\\.33\\./"
     }
   ]
 }

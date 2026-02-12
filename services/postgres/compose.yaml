@@ -12,7 +12,7 @@ volumes:
 
 services:
   db:
-    image: postgres:17.5
+    image: postgres:17.5@sha256:aadf2c0696f5ef357aa7a68da995137f0cf17bad0bf6e1f17de06ae5c769b302
     container_name: postgres_db
     restart: unless-stopped
     networks:
@@ -31,7 +31,7 @@ services:
       timeout: 5s
       retries: 5
   pgadmin_service:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4@sha256:8c128407f45f1c582eda69e71da1a393237388469052e3cc1e6ae4a475e12b70
     container_name: pgadmin
     restart: unless-stopped
     environment:
