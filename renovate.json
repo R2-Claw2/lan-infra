@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["docker-compose"],
+  "docker-compose": {
+    "fileMatch": [
+      "(^|/)(services|apps)(/.+)?/compose\\.ya?ml$"
+    ]
+  },
+  "labels": ["dependencies", "docker"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "timezone": "America/Vancouver",
+  "schedule": ["before 6am on monday"]
+}
