@@ -37,7 +37,6 @@ jobs:
 
       - name: Trigger ${{ matrix.stack.name }}
         env:
-          WEBHOOK: ${{ secrets[matrix.stack.secret] }}
           STACK_PATH: ${{ matrix.stack.path }}
           BEFORE: ${{ github.event.before }}
           SHA: ${{ github.sha }}
