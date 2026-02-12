@@ -11,5 +11,28 @@
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
   "timezone": "America/Vancouver",
-  "schedule": ["before 6am on monday"]
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "description": "Pin docker image digests so running image hash is explicit and reviewable",
+      "matchManagers": ["docker-compose"],
+      "matchDatasources": ["docker"],
+      "pinDigests": true
+    },
+    {
+      "description": "Do not auto-propose major version upgrades for core databases",
+      "matchManagers": ["docker-compose"],
+      "matchPackageNames": [
+        "postgres",
+        "docker.io/library/postgres",
+        "redis",
+        "docker.io/library/redis",
+        "valkey/valkey",
+        "docker.io/valkey/valkey",
+        "ghcr.io/immich-app/postgres"
+      ],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
 }
