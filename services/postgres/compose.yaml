@@ -31,7 +31,7 @@ services:
       timeout: 5s
       retries: 5
   pgadmin_service:
-    image: dpage/pgadmin4@sha256:10137f33be7ed61e47f56004493710cb5b80ba7fb0ca01758855e242f1f284a7
+    image: dpage/pgadmin4:9.12.0@sha256:10137f33be7ed61e47f56004493710cb5b80ba7fb0ca01758855e242f1f284a7
     container_name: pgadmin
     restart: unless-stopped
     environment:
