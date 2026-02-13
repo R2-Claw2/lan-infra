@@ -10,6 +10,16 @@
   "labels": ["dependencies", "docker"],
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
+
+  "prBodyColumns": ["Package", "Update", "Change", "Digest", "References"],
+  "prBodyDefinitions": {
+    "Digest": "`{{{currentDigestShort}}}` → `{{{newDigestShort}}}`",
+    "References": "{{#if sourceUrl}}[source]({{{sourceUrl}}}){{/if}}{{#if url}} · [release notes]({{{url}}}){{/if}}"
+  },
+  "prBodyNotes": [
+    "<!-- lan-infra: include digests + links so reviewers can see what changed -->",
+    "If this is a digest-only update, the *tag* may be unchanged — use the Digest column + source/release-notes links above to review what actually changed."
+  ],
   "timezone": "America/Vancouver",
   "schedule": ["before 6am on monday"],
   "packageRules": [
