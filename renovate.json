@@ -1,17 +1,29 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "enabledManagers": ["docker-compose"],
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "docker-compose"
+  ],
   "docker-compose": {
-    "fileMatch": [
-      "(^|/)(services|apps)(/.+)?/compose\\.ya?ml$"
+    "managerFilePatterns": [
+      "/(^|/)(services|apps)(/.+)?/compose\\.ya?ml$/"
     ]
   },
-  "labels": ["dependencies", "docker"],
+  "labels": [
+    "dependencies",
+    "docker"
+  ],
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
-
-  "prBodyColumns": ["Package", "Update", "Change", "Digest", "References"],
+  "prBodyColumns": [
+    "Package",
+    "Update",
+    "Change",
+    "Digest",
+    "References"
+  ],
   "prBodyDefinitions": {
     "Digest": "`{{{currentDigestShort}}}` → `{{{newDigestShort}}}`",
     "References": "{{#if sourceUrl}}[source]({{{sourceUrl}}}){{/if}}{{#if url}} · [release notes]({{{url}}}){{/if}}"
@@ -21,17 +33,25 @@
     "If this is a digest-only update, the *tag* may be unchanged — use the Digest column + source/release-notes links above to review what actually changed."
   ],
   "timezone": "America/Vancouver",
-  "schedule": ["before 6am on monday"],
+  "schedule": [
+    "before 6am on monday"
+  ],
   "packageRules": [
     {
       "description": "Pin docker image digests so running image hash is explicit and reviewable",
-      "matchManagers": ["docker-compose"],
-      "matchDatasources": ["docker"],
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
       "pinDigests": true
     },
     {
       "description": "Do not auto-propose major version upgrades for core databases",
-      "matchManagers": ["docker-compose"],
+      "matchManagers": [
+        "docker-compose"
+      ],
       "matchPackageNames": [
         "postgres",
         "docker.io/library/postgres",
@@ -41,13 +61,19 @@
         "docker.io/valkey/valkey",
         "ghcr.io/immich-app/postgres"
       ],
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "enabled": false
     },
     {
       "description": "Keep Portainer on 2.33 LTS line while still allowing digest updates",
-      "matchManagers": ["docker-compose"],
-      "matchPackageNames": ["portainer/portainer-ee"],
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchPackageNames": [
+        "portainer/portainer-ee"
+      ],
       "allowedVersions": "/^2\\.33\\./"
     }
   ]
