@@ -6,7 +6,7 @@ networks:
 
 services:
   nextcloud:
-    image: nextcloud:32-apache@sha256:b8658180f826242849b3f65c42a90529b582f9824bde0b7cc93fd08077bc4e14
+    image: nextcloud:32-apache@sha256:11c5413cb3cc216f6cdded2f6118784bbfdc0b515690608fc7b72a1e9f770da6
     container_name: nextcloud
     restart: unless-stopped
     networks:
