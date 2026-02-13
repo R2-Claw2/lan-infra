@@ -9,7 +9,7 @@ volumes:
 
 services:
   app:
-    image: "jc21/nginx-proxy-manager:latest@sha256:3c5acf6bc3125079906078d0cacec59130018bb32ed64092f7ce495edc68c5ec"
+    image: "jc21/nginx-proxy-manager:2.13.7@sha256:3c5acf6bc3125079906078d0cacec59130018bb32ed64092f7ce495edc68c5ec"
     restart: unless-stopped
     ports:
       - "80:80" # Public HTTP Port
