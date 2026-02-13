@@ -12,7 +12,7 @@ volumes:
 
 services:
   db:
-    image: postgres:17.5@sha256:aadf2c0696f5ef357aa7a68da995137f0cf17bad0bf6e1f17de06ae5c769b302
+    image: postgres:17.8@sha256:1eada89ec2521ae0f61125f6bdaf83bbbf88a43fecda48d112a83bb92df75c36
     container_name: postgres_db
     restart: unless-stopped
     networks:
