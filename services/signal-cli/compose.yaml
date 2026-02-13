@@ -8,7 +8,7 @@ volumes:
 
 services:
   signal-cli:
-    image: registry.gitlab.com/packaging/signal-cli/signal-cli-jre:latest@sha256:dff0a8c7068683c9904183e4cf04f4cfbcf5eaf558b74091ceab886e67a1ff40
+    image: registry.gitlab.com/packaging/signal-cli/signal-cli-jre:v0-13-24-1@sha256:dff0a8c7068683c9904183e4cf04f4cfbcf5eaf558b74091ceab886e67a1ff40
     command: daemon --http 0.0.0.0:7583
     restart: unless-stopped
     ports:
