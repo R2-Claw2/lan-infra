@@ -19,7 +19,7 @@ services:
     networks:
       - app_network
   db:
-    image: docker.io/library/postgres:17@sha256:ecebd237d9aaf83112427807848bc41ba6bd4df8a2f6936e09f7db1813609625
+    image: docker.io/library/postgres:17@sha256:1eada89ec2521ae0f61125f6bdaf83bbbf88a43fecda48d112a83bb92df75c36
     restart: unless-stopped
     volumes:
       - pgdata_paperless:/var/lib/postgresql/data
