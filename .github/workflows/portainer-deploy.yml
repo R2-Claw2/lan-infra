@@ -1,0 +1,33 @@
+name: Portainer Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/**/compose.yaml'
+      - '.github/workflows/portainer-deploy.yml'
+      - 'scripts/portainer-webhook-deploy.js'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit for diff
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Run Portainer deploy script
+        env:
+          # Secrets are automatically mapped to env vars by GitHub Actions
+          # PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
+          # PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
+          # Add more secrets as needed for other services
+        run: |
+          node scripts/portainer-webhook-deploy.js
