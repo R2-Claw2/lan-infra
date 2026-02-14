@@ -31,13 +31,29 @@ jobs:
       - name: Run Portainer deploy script
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
-          PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
+          PORTAINER_WEBHOOK_ADGUARD: ${{ secrets.PORTAINER_WEBHOOK_ADGUARD }}
           PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
-          # ⚠️ LIMITATION: For each new service, you MUST:
-          #   1. Create a matching secret named PORTAINER_WEBHOOK_<SERVICE_NAME>
-          #   2. Add a corresponding env entry here that maps to that secret.
-          # Example for 'home-assistant' service:
-          #   PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
+          PORTAINER_WEBHOOK_DISPATCHARR: ${{ secrets.PORTAINER_WEBHOOK_DISPATCHARR }}
+          PORTAINER_WEBHOOK_GOVEE2MQTT: ${{ secrets.PORTAINER_WEBHOOK_GOVEE2MQTT }}
+          PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
+          PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
+          PORTAINER_WEBHOOK_IMMICH: ${{ secrets.PORTAINER_WEBHOOK_IMMICH }}
+          PORTAINER_WEBHOOK_LITELLM: ${{ secrets.PORTAINER_WEBHOOK_LITELLM }}
+          PORTAINER_WEBHOOK_MATTER: ${{ secrets.PORTAINER_WEBHOOK_MATTER }}
+          PORTAINER_WEBHOOK_MOSQUITTO: ${{ secrets.PORTAINER_WEBHOOK_MOSQUITTO }}
+          PORTAINER_WEBHOOK_MUSIC_ASSISTANT_ALEXA_API: ${{ secrets.PORTAINER_WEBHOOK_MUSIC_ASSISTANT_ALEXA_API }}
+          PORTAINER_WEBHOOK_NEXTCLOUD: ${{ secrets.PORTAINER_WEBHOOK_NEXTCLOUD }}
+          PORTAINER_WEBHOOK_NGINXPROXYMANAGER: ${{ secrets.PORTAINER_WEBHOOK_NGINXPROXYMANAGER }}
+          PORTAINER_WEBHOOK_PAPERLESS_AI: ${{ secrets.PORTAINER_WEBHOOK_PAPERLESS_AI }}
+          PORTAINER_WEBHOOK_PAPERLESS_NGX: ${{ secrets.PORTAINER_WEBHOOK_PAPERLESS_NGX }}
+          PORTAINER_WEBHOOK_PLEX: ${{ secrets.PORTAINER_WEBHOOK_PLEX }}
+          PORTAINER_WEBHOOK_POSTGRES: ${{ secrets.PORTAINER_WEBHOOK_POSTGRES }}
+          PORTAINER_WEBHOOK_REDIS: ${{ secrets.PORTAINER_WEBHOOK_REDIS }}
+          PORTAINER_WEBHOOK_SIGNAL_CLI_REST_API: ${{ secrets.PORTAINER_WEBHOOK_SIGNAL_CLI_REST_API }}
+          PORTAINER_WEBHOOK_UHF_SERVER: ${{ secrets.PORTAINER_WEBHOOK_UHF_SERVER }}
+          # ⚠️ NOTE: The following services do not have webhooks configured:
+          #   PORTAINER_WEBHOOK_PORTAINER
+          #   PORTAINER_WEBHOOK_SIGNAL_CLI
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           node scripts/portainer-webhook-deploy.js
