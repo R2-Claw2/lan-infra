@@ -1,0 +1,41 @@
+name: Portainer Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/**/compose.yaml'
+      - '.github/workflows/portainer-deploy.yml'
+      - 'scripts/portainer-webhook-deploy.js'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v47
+        with:
+          files: services/**/compose.yaml
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Portainer deploy script
+        if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
+          PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
+          # ⚠️ LIMITATION: For each new service, you MUST:
+          #   1. Create a matching secret named PORTAINER_WEBHOOK_<SERVICE_NAME>
+          #   2. Add a corresponding env entry here that maps to that secret.
+          # Example for 'home-assistant' service:
+          #   PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          node scripts/portainer-webhook-deploy.js
