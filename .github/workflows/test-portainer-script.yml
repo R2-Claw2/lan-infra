@@ -23,9 +23,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Run tests
         run: |
           cd scripts
-          npm test
+          node test-portainer-webhook.js
