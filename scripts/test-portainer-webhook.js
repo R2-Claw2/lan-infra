@@ -3,6 +3,7 @@
 /**
  * Test script for PortainerWebhookDeploy
  * Run with: node test-portainer-webhook.js
+ * Or make executable: chmod +x test-portainer-webhook.js && ./test-portainer-webhook.js
  */
 
 // Simple test without npm dependencies
