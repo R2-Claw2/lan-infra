@@ -90,6 +90,12 @@ class PortainerWebhookDeploy {
       throw new Error(`Invalid webhook URL for ${serviceName}. Must be HTTPS.`);
     }
 
+    // Basic validation that it looks like a Portainer webhook URL
+    if (!webhookUrl.includes('/api/stacks/webhooks/')) {
+      console.warn(`⚠️ Webhook URL for ${serviceName} doesn't look like a standard Portainer webhook URL`);
+      console.warn(`   Expected format: https://portainer.example.com/api/stacks/webhooks/<token>`);
+    }
+
     return webhookUrl;
   }
 
