@@ -25,7 +25,6 @@ Cleaner implementation using Node.js script instead of bash-in-YAML.
 
 - `scripts/portainer-webhook-deploy.js` - Main deployment script
 - `scripts/test-portainer-webhook.js` - Test script
-- `scripts/package.json` - Node.js package config
 - `.github/workflows/portainer-deploy.yml` - GitHub Actions workflow
 - `.github/portainer-deploy-README.md` - This documentation
 
@@ -81,9 +80,6 @@ node portainer-webhook-deploy.js  # Run deployment
 cd scripts
 
 # Run tests
-npm test
-
-# Manual test with mock data
 node test-portainer-webhook.js
 
 # Simulate GitHub Actions environment
