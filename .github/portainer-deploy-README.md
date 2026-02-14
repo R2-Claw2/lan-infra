@@ -72,7 +72,8 @@ node portainer-webhook-deploy.js  # Run deployment
 
 1. Enable webhook in Portainer UI
 2. Add GitHub secret: `PORTAINER_WEBHOOK_<SERVICE_UPPERCASE>`
-3. That's it! The script automatically detects the service
+3. Update `.github/workflows/portainer-deploy.yml` to pass the new secret as an environment variable to the script (following the pattern of existing entries, e.g., lines 29–31).
+4. With the workflow updated, the script will automatically detect the service from changed `services/**/compose.yaml` files and use the corresponding secret.
 
 ## Development
 

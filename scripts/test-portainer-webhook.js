@@ -9,6 +9,8 @@
 // Simple test without npm dependencies
 
 // Mock the PortainerWebhookDeploy class for testing
+// NOTE: This duplicates some logic from the main script for unit testing purposes.
+// In a real test suite, we would import and test the actual implementation.
 class MockPortainerWebhookDeploy {
   constructor() {
     this.servicesPath = 'services';
@@ -38,6 +40,7 @@ async function runTests() {
   console.log('🧪 Testing PortainerWebhookDeploy class\n');
 
   const deployer = new MockPortainerWebhookDeploy();
+  let testFailures = 0;
 
   // Test 1: Extract service names
   console.log('Test 1: extractServiceNames');
@@ -51,10 +54,21 @@ async function runTests() {
   ];
 
   const services = deployer.extractServiceNames(testFiles);
+  const expectedServices = ['hello', 'adguard', 'home-assistant'];
+  const servicesSorted = services.sort();
+  const expectedSorted = expectedServices.sort();
+  
   console.log(`  Input: ${testFiles.length} files`);
   console.log(`  Output: ${services.length} services`);
   console.log(`  Services: ${services.join(', ')}`);
-  console.log(`  ✅ Expected: hello, adguard, home-assistant\n`);
+  
+  if (JSON.stringify(servicesSorted) === JSON.stringify(expectedSorted)) {
+    console.log(`  ✅ Correct - Expected: ${expectedServices.join(', ')}`);
+  } else {
+    console.log(`  ❌ Incorrect - Expected: ${expectedServices.join(', ')}`);
+    testFailures++;
+  }
+  console.log();
 
   // Test 2: Secret name generation
   console.log('Test 2: Secret name convention');
@@ -71,6 +85,7 @@ async function runTests() {
       console.log(`    ✅ Correct`);
     } else {
       console.log(`    ❌ Expected: ${test.expected}`);
+      testFailures++;
     }
   }
 
@@ -98,20 +113,35 @@ async function runTests() {
 
   for (const [i, test] of edgeCases.entries()) {
     const result = deployer.extractServiceNames(test.input);
-    const passed = JSON.stringify(result.sort()) === JSON.stringify(test.expected.sort());
+    const resultSorted = result.sort();
+    const expectedSorted = test.expected.sort();
+    const passed = JSON.stringify(resultSorted) === JSON.stringify(expectedSorted);
+    
     console.log(`  Case ${i + 1}: ${passed ? '✅' : '❌'}`);
     if (!passed) {
       console.log(`    Got: ${JSON.stringify(result)}`);
       console.log(`    Expected: ${JSON.stringify(test.expected)}`);
+      testFailures++;
     }
   }
 
-  console.log('\n✅ All tests passed');
+  // Summary
+  console.log('\n' + '='.repeat(50));
+  if (testFailures > 0) {
+    console.error(`❌ ${testFailures} test(s) failed!`);
+    process.exit(1);
+  } else {
+    console.log('✅ All tests passed');
+  }
+  
   console.log('\nNote: For full integration testing, set environment variables:');
   console.log('  PORTAINER_WEBHOOK_HELLO=https://portainer.diegoa.ca/api/stacks/webhooks/...');
   console.log('\nThen run: node portainer-webhook-deploy.js');
 }
 
 if (require.main === module) {
-  runTests().catch(console.error);
+  runTests().catch(error => {
+    console.error('💥 Test runner error:', error);
+    process.exit(1);
+  });
 }
