@@ -20,11 +20,23 @@ class PortainerWebhookDeploy {
 
   /**
    * Get list of changed files between current and previous commit
+   * Returns null if diff cannot be determined (e.g., force push, initial commit)
    */
   getChangedFiles() {
     try {
+      // First, check if we have a previous commit to diff against
+      const hasPreviousCommit = execSync('git rev-parse HEAD~1 2>/dev/null || echo ""', {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore']
+      }).trim();
+
+      if (!hasPreviousCommit) {
+        console.log('⚠️ No previous commit found (might be initial commit)');
+        return null; // Cannot determine what changed
+      }
+
       // Try to get diff between current and previous commit
-      const diff = execSync('git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD HEAD~1 2>/dev/null || echo ""', {
+      const diff = execSync('git diff --name-only HEAD~1 HEAD', {
         encoding: 'utf8',
         stdio: ['pipe', 'pipe', 'ignore']
       }).trim();
@@ -33,16 +45,13 @@ class PortainerWebhookDeploy {
         return diff.split('\n').filter(Boolean);
       }
 
-      // Fallback: if no diff (e.g., initial commit), check all compose files
-      console.log('No git diff available, checking all compose files...');
-      const allComposeFiles = execSync(`find ${this.servicesPath} -name "compose.yaml" -type f 2>/dev/null || echo ""`, {
-        encoding: 'utf8'
-      }).trim();
-
-      return allComposeFiles ? allComposeFiles.split('\n') : [];
-    } catch (error) {
-      console.error('Error getting changed files:', error.message);
+      // Empty diff means no files changed (but we know what changed: nothing)
+      console.log('📝 No files changed between commits');
       return [];
+    } catch (error) {
+      console.error('⚠️ Cannot determine changed files:', error.message);
+      console.log('This can happen with force pushes, squash merges, or other non-linear history.');
+      return null; // Cannot determine what changed
     }
   }
 
@@ -167,6 +176,19 @@ class PortainerWebhookDeploy {
 
     // Get changed files
     const changedFiles = this.getChangedFiles();
+    
+    if (changedFiles === null) {
+      console.log('❓ Cannot determine what changed (force push, squash merge, or initial commit)');
+      console.log('⚠️ Skipping deployment to avoid redeploying all services unnecessarily.');
+      console.log('ℹ️ Normal pushes with linear history will work correctly.');
+      return { 
+        success: true, 
+        deployed: [],
+        skipped: true,
+        reason: 'Cannot determine changed files (non-linear git history)'
+      };
+    }
+
     console.log(`Changed files detected: ${changedFiles.length}`);
     if (changedFiles.length > 0) {
       console.log(changedFiles.map(f => `  - ${f}`).join('\n'));
@@ -177,7 +199,7 @@ class PortainerWebhookDeploy {
     console.log(`\nServices to deploy: ${serviceNames.length}`);
     if (serviceNames.length === 0) {
       console.log('No service compose files changed.');
-      return { success: true, deployed: [] };
+      return { success: true, deployed: [], skipped: false };
     }
     console.log(serviceNames.map(s => `  - ${s}`).join('\n'));
 
@@ -215,7 +237,8 @@ class PortainerWebhookDeploy {
       success: allSuccess,
       deployed: successful.map(r => r.service),
       failed: failed.map(r => r.service),
-      results
+      results,
+      skipped: false
     };
   }
 }
@@ -226,7 +249,10 @@ if (require.main === module) {
   
   deployer.deploy()
     .then(result => {
-      if (!result.success) {
+      if (result.skipped) {
+        console.log(`\n⚠️ ${result.reason}`);
+        process.exit(0); // Exit with success but skipped
+      } else if (!result.success) {
         console.error('\n❌ Some deployments failed');
         process.exit(1);
       } else if (result.deployed.length > 0) {

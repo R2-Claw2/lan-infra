@@ -48,7 +48,39 @@ async function runTests() {
     }
   }
 
-  console.log('\n✅ Basic tests passed');
+  // Test 3: Extract service names edge cases
+  console.log('\nTest 3: Edge cases for extractServiceNames');
+  const edgeCases = [
+    {
+      input: [
+        'services/hello/compose.yaml',
+        'services/hello/other-file.txt', // Should be ignored
+        'not-services/hello/compose.yaml', // Wrong prefix
+        'services/hello/subdir/compose.yaml', // Too deep
+      ],
+      expected: ['hello']
+    },
+    {
+      input: [],
+      expected: []
+    },
+    {
+      input: ['README.md', 'Dockerfile', '.gitignore'],
+      expected: []
+    }
+  ];
+
+  for (const [i, test] of edgeCases.entries()) {
+    const result = deployer.extractServiceNames(test.input);
+    const passed = JSON.stringify(result.sort()) === JSON.stringify(test.expected.sort());
+    console.log(`  Case ${i + 1}: ${passed ? '✅' : '❌'}`);
+    if (!passed) {
+      console.log(`    Got: ${JSON.stringify(result)}`);
+      console.log(`    Expected: ${JSON.stringify(test.expected)}`);
+    }
+  }
+
+  console.log('\n✅ All tests passed');
   console.log('\nNote: For full integration testing, set environment variables:');
   console.log('  PORTAINER_WEBHOOK_HELLO=https://portainer.diegoa.ca/api/stacks/webhooks/...');
   console.log('\nThen run: node portainer-webhook-deploy.js');
