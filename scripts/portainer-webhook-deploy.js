@@ -1,13 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Portainer Webhook Deploy Script
- * 
- * Detects changed services and triggers Portainer webhooks.
- * Designed to be called from GitHub Actions with minimal YAML.
- */
-
-const { execSync } = require('child_process');
 const https = require('https');
 
 class PortainerWebhookDeploy {
@@ -16,64 +8,10 @@ class PortainerWebhookDeploy {
     this.secretPrefix = 'PORTAINER_WEBHOOK_';
   }
 
-  /**
-   * Get list of changed files between current and previous commit
-   * Returns null if diff cannot be determined (e.g., force push, initial commit)
-   */
-  getChangedFiles() {
-    try {
-      // Use environment variables for commit range if provided
-      // GitHub Actions provides GITHUB_BEFORE_SHA and GITHUB_SHA
-      const fromCommit = process.env.GITHUB_BEFORE_SHA || 'HEAD~1';
-      const toCommit = process.env.GITHUB_SHA || 'HEAD';
-      
-      console.log(`Checking for changed files between ${fromCommit} and ${toCommit}...`);
-      
-      // Check if we have the from commit
-      let hasFromCommit = '';
-      try {
-        hasFromCommit = execSync('git', ['rev-parse', '--verify', fromCommit], {
-          encoding: 'utf8',
-          stdio: ['pipe', 'pipe', 'ignore']
-        }).trim();
-      } catch {
-        // If the command fails (e.g., no previous commit), treat as no from commit
-        hasFromCommit = '';
-      }
-
-      if (!hasFromCommit) {
-        console.log(`⚠️ Commit ${fromCommit} not found (might be initial commit or shallow clone)`);
-        return null; // Cannot determine what changed
-      }
-
-      // Try to get diff between the two commits
-      const diff = execSync('git', ['diff', '--name-only', fromCommit, toCommit], {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore']
-      }).trim();
-
-      if (diff) {
-        return diff.split('\n').filter(Boolean);
-      }
-
-      // Empty diff means no files changed (but we know what changed: nothing)
-      console.log('📝 No files changed between commits');
-      return [];
-    } catch (error) {
-      console.error('⚠️ Cannot determine changed files:', error.message);
-      console.log('This can happen with force pushes, squash merges, or other non-linear history.');
-      return null; // Cannot determine what changed
-    }
-  }
-
-  /**
-   * Extract service names from file paths
-   */
   extractServiceNames(filePaths) {
     const serviceNames = new Set();
 
     for (const filePath of filePaths) {
-      // Match pattern: services/<service-name>/compose.yaml
       const match = filePath.match(new RegExp(`^${this.servicesPath}/([^/]+)/compose\\.yaml$`));
       if (match) {
         serviceNames.add(match[1]);
@@ -83,9 +21,6 @@ class PortainerWebhookDeploy {
     return Array.from(serviceNames);
   }
 
-  /**
-   * Get webhook URL from GitHub secrets (passed as env vars)
-   */
   getWebhookUrl(serviceName) {
     const normalizedServiceName = serviceName.replace(/-/g, '_').toUpperCase();
     const secretName = `${this.secretPrefix}${normalizedServiceName}`;
@@ -101,47 +36,22 @@ class PortainerWebhookDeploy {
       );
     }
 
-    // Validate URL format using URL constructor (catches more errors than startsWith)
-    try {
-      const url = new URL(webhookUrl);
-      if (url.protocol !== 'https:') {
-        // Don't leak full URL, just show protocol
-        throw new Error(`Webhook URL for ${serviceName} must use HTTPS (got: ${url.protocol}//...)`);
-      }
-      // Additional validation: ensure it looks like a Portainer webhook URL
-      if (!url.pathname.includes('/api/stacks/webhooks/')) {
-        console.warn(`⚠️ Webhook URL for ${serviceName} doesn't look like a standard Portainer webhook URL`);
-        console.warn(`   Expected format: https://portainer.example.com/api/stacks/webhooks/<token>`);
-      }
-      return webhookUrl;
-    } catch (error) {
-      if (error instanceof TypeError) {
-        // Don't leak full URL in error message
-        throw new Error(`Invalid webhook URL for ${serviceName}: URL is malformed or not a valid HTTPS URL`);
-      }
-      throw error;
-    }
+    return webhookUrl;
   }
 
-  /**
-   * Trigger webhook with retry logic
-   */
   async triggerWebhook(webhookUrl, serviceName, attempt = 1, maxAttempts = 3) {
     return new Promise((resolve, reject) => {
       const url = new URL(webhookUrl);
-      // Note: Portainer webhooks don't need action=redeploy parameter
-      // The webhook URL itself contains the authentication token
-      // We're NOT adding any query parameters
 
       const options = {
         hostname: url.hostname,
         port: url.port || 443,
-        path: url.pathname + url.search, // Keep existing query params if any
+        path: url.pathname + url.search,
         method: 'POST',
         headers: {
           'User-Agent': 'GitHub Actions (Portainer Deploy)',
         },
-        timeout: 10000, // 10 second timeout
+        timeout: 10000,
       };
 
       console.log(`[${serviceName}] Attempt ${attempt}/${maxAttempts}: triggering Portainer webhook`);
@@ -154,29 +64,27 @@ class PortainerWebhookDeploy {
             console.log(`✅ [${serviceName}] Success (HTTP ${res.statusCode})`);
             resolve(true);
           } else if (attempt < maxAttempts) {
-            console.log(`⚠️ [${serviceName}] Failed (HTTP ${res.statusCode}), retrying...`);
-            console.log(`   Response: ${data || '(empty)'}`);
+            console.log(`🔄 [${serviceName}] Retrying (HTTP ${res.statusCode})...`);
             setTimeout(() => {
               this.triggerWebhook(webhookUrl, serviceName, attempt + 1, maxAttempts)
                 .then(resolve)
                 .catch(reject);
-            }, 5000); // 5 second delay between retries
+            }, 2000);
           } else {
-            console.error(`❌ [${serviceName}] All attempts failed (HTTP ${res.statusCode})`);
-            console.error(`   Response: ${data || '(empty)'}`);
-            reject(new Error(`Webhook failed for ${serviceName}: HTTP ${res.statusCode}`));
+            console.error(`❌ [${serviceName}] Failed after ${maxAttempts} attempts (HTTP ${res.statusCode})`);
+            reject(new Error(`HTTP ${res.statusCode}: ${data}`));
           }
         });
       });
 
       req.on('error', (error) => {
         if (attempt < maxAttempts) {
-          console.log(`⚠️ [${serviceName}] Network error: ${error.message}, retrying...`);
+          console.log(`🔄 [${serviceName}] Network error, retrying: ${error.message}`);
           setTimeout(() => {
             this.triggerWebhook(webhookUrl, serviceName, attempt + 1, maxAttempts)
               .then(resolve)
               .catch(reject);
-          }, 5000);
+          }, 2000);
         } else {
           console.error(`❌ [${serviceName}] Network error after ${maxAttempts} attempts: ${error.message}`);
           reject(error);
@@ -186,15 +94,15 @@ class PortainerWebhookDeploy {
       req.on('timeout', () => {
         req.destroy();
         if (attempt < maxAttempts) {
-          console.log(`⚠️ [${serviceName}] Timeout, retrying...`);
+          console.log(`🔄 [${serviceName}] Timeout, retrying...`);
           setTimeout(() => {
             this.triggerWebhook(webhookUrl, serviceName, attempt + 1, maxAttempts)
               .then(resolve)
               .catch(reject);
-          }, 5000);
+          }, 2000);
         } else {
           console.error(`❌ [${serviceName}] Timeout after ${maxAttempts} attempts`);
-          reject(new Error(`Timeout for ${serviceName}`));
+          reject(new Error('Request timeout'));
         }
       });
 
@@ -202,132 +110,82 @@ class PortainerWebhookDeploy {
     });
   }
 
-  /**
-   * Main deployment logic
-   */
-  async deploy() {
-    try {
-      console.log('🚀 Portainer Webhook Deploy Script');
-      console.log('====================================\n');
+  async run() {
+    console.log('🚀 Portainer Webhook Deploy\n');
 
-      // Get changed files
-      const changedFiles = this.getChangedFiles();
+    const allChangedFiles = process.env.ALL_CHANGED_FILES || '';
     
-      if (changedFiles === null) {
-        console.log('❓ Cannot determine what changed (force push, squash merge, or initial commit)');
-        console.log('⚠️ Skipping deployment to avoid redeploying all services unnecessarily.');
-        console.log('ℹ️ Normal pushes with linear history will work correctly.');
-        return { 
-          success: true, 
-          deployed: [],
-          skipped: true,
-          reason: 'Cannot determine changed files (non-linear git history)'
-        };
-      }
-
-      console.log(`Changed files detected: ${changedFiles.length}`);
-      if (changedFiles.length > 0) {
-        console.log(changedFiles.map(f => `  - ${f}`).join('\n'));
-      }
-
-      // Extract service names
-      const serviceNames = this.extractServiceNames(changedFiles);
-      console.log(`\nServices to deploy: ${serviceNames.length}`);
-      if (serviceNames.length === 0) {
-        console.log('No service compose files changed.');
-        return { success: true, deployed: [], skipped: false };
-      }
-      console.log(serviceNames.map(s => `  - ${s}`).join('\n'));
-
-      // Deploy each service
-      const results = [];
-      for (const serviceName of serviceNames) {
-        try {
-          console.log(`\n--- Deploying ${serviceName} ---`);
-          const webhookUrl = this.getWebhookUrl(serviceName);
-          await this.triggerWebhook(webhookUrl, serviceName);
-          results.push({ service: serviceName, success: true });
-        } catch (error) {
-          console.error(`Failed to deploy ${serviceName}: ${error.message}`);
-          results.push({ service: serviceName, success: false, error: error.message });
-        }
-      }
-
-      // Summary
-      console.log('\n📊 Deployment Summary');
-      console.log('====================');
-      const successful = results.filter(r => r.success);
-      const failed = results.filter(r => !r.success);
-
-      if (successful.length > 0) {
-        console.log(`✅ Successful: ${successful.map(r => r.service).join(', ')}`);
-      }
-      if (failed.length > 0) {
-        console.log(`❌ Failed: ${failed.map(r => r.service).join(', ')}`);
-        console.log('\nErrors:');
-        failed.forEach(r => console.log(`  - ${r.service}: ${r.error}`));
-      }
-
-      const allSuccess = failed.length === 0;
-      return {
-        success: allSuccess,
-        deployed: successful.map(r => r.service),
-        failed: failed.map(r => r.service),
-        results,
-        skipped: false
-      };
-    } catch (error) {
-      console.error('💥 Unhandled error in deploy():', error.message);
-      console.error('Stack:', error.stack);
-      return {
-        success: false,
-        deployed: [],
-        failed: [],
-        results: [],
-        skipped: false,
-        error: error.message
-      };
+    if (!allChangedFiles) {
+      console.log('📝 No changed files detected');
+      return { deployed: [], skipped: [], success: true };
     }
+
+    const changedFiles = allChangedFiles.split(' ');
+    console.log(`📁 Changed files: ${changedFiles.length} file(s)`);
+    
+    const serviceNames = this.extractServiceNames(changedFiles);
+    
+    if (serviceNames.length === 0) {
+      console.log('📝 No compose.yaml files changed');
+      return { deployed: [], skipped: [], success: true };
+    }
+
+    console.log(`🎯 Services to deploy: ${serviceNames.join(', ')}\n`);
+
+    const results = [];
+    for (const serviceName of serviceNames) {
+      try {
+        const webhookUrl = this.getWebhookUrl(serviceName);
+        console.log(`⚡ Deploying ${serviceName}...`);
+        await this.triggerWebhook(webhookUrl, serviceName);
+        results.push({ serviceName, success: true });
+      } catch (error) {
+        console.error(`💥 Failed to deploy ${serviceName}: ${error.message}`);
+        results.push({ serviceName, success: false, error: error.message });
+      }
+    }
+
+    const deployed = results.filter(r => r.success).map(r => r.serviceName);
+    const failed = results.filter(r => !r.success);
+    
+    console.log('\n📊 Deployment Summary:');
+    console.log(`✅ Success: ${deployed.length} service(s)`);
+    console.log(`❌ Failed: ${failed.length} service(s)`);
+    
+    if (deployed.length > 0) {
+      console.log(`   ${deployed.join(', ')}`);
+    }
+    
+    if (failed.length > 0) {
+      console.log('Failed services:');
+      failed.forEach(f => console.log(`   ${f.serviceName}: ${f.error}`));
+    }
+
+    return {
+      deployed,
+      failed: failed.map(f => f.serviceName),
+      success: failed.length === 0
+    };
   }
 }
 
-// CLI entry point
+module.exports = PortainerWebhookDeploy;
+
 if (require.main === module) {
   const deployer = new PortainerWebhookDeploy();
-  
-  // Handle process signals
-  let isExiting = false;
-  const handleExit = (signal) => {
-    if (isExiting) return;
-    isExiting = true;
-    console.log(`\n⚠️ Received ${signal}, shutting down...`);
-    process.exit(1);
-  };
-  
-  process.on('SIGINT', () => handleExit('SIGINT'));
-  process.on('SIGTERM', () => handleExit('SIGTERM'));
-  
-  deployer.deploy()
-    .then(result => {
-      if (result.skipped) {
-        console.log(`\n⚠️ ${result.reason}`);
-        process.exit(0); // Exit with success but skipped
-      } else if (!result.success) {
-        console.error('\n❌ Some deployments failed');
-        process.exit(1);
-      } else if (result.deployed.length > 0) {
-        console.log('\n🎉 All deployments successful!');
-        process.exit(0);
-      } else {
-        console.log('\nℹ️ No services needed deployment.');
-        process.exit(0);
-      }
-    })
-    .catch(error => {
-      console.error('\n💥 Fatal error:', error.message);
-      console.error('Stack:', error.stack);
+  deployer.run().then(result => {
+    if (!result.success) {
+      console.error('\n❌ Some deployments failed');
       process.exit(1);
-    });
+    } else if (result.deployed.length > 0) {
+      console.log('\n🎉 All deployments successful!');
+      process.exit(0);
+    } else {
+      console.log('\nℹ️ No services needed deployment.');
+      process.exit(0);
+    }
+  }).catch(error => {
+    console.error('\n💥 Fatal error:', error.message);
+    process.exit(1);
+  });
 }
-
-module.exports = PortainerWebhookDeploy;

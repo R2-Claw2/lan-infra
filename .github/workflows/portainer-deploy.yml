@@ -14,8 +14,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v47
         with:
-          fetch-depth: 0  # Full history to ensure we have both SHAs
+          files: services/**/compose.yaml
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,13 +27,13 @@ jobs:
           node-version: '20'
 
       - name: Run Portainer deploy script
+        if: steps.changed-files.outputs.any_changed == 'true'
         env:
           PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
           PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
           # ⚠️ IMPORTANT: When adding a new service, add its webhook secret here!
           # Example for 'home-assistant' service:
           # PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
-          GITHUB_BEFORE_SHA: ${{ github.event.before }}
-          GITHUB_SHA: ${{ github.sha }}
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           node scripts/portainer-webhook-deploy.js
