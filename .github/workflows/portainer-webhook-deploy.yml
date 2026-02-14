@@ -1,0 +1,121 @@
+name: Portainer Webhook Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/**/compose.yaml'
+      - '.github/workflows/portainer-webhook-deploy.yml'
+
+jobs:
+  detect-and-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      services_changed: ${{ steps.detect-services.outputs.services }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit for diff
+  
+      - name: Detect changed services
+        id: detect-services
+        run: |
+          echo "Checking for changed compose files..."
+          
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD HEAD~1 2>/dev/null || echo "")
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No changed files detected (might be initial commit or force push)"
+            # Fallback: check all compose files in current commit
+            CHANGED_FILES=$(find services -name "compose.yaml" -type f 2>/dev/null || echo "")
+          fi
+          
+          # Filter for compose.yaml files in service directories
+          CHANGED_SERVICES=""
+          for file in $CHANGED_FILES; do
+            if [[ "$file" == services/*/compose.yaml ]]; then
+              # Extract service name from path (e.g., services/hello/compose.yaml -> hello)
+              SERVICE_NAME=$(echo "$file" | cut -d'/' -f2)
+              echo "Found changed service: $SERVICE_NAME (file: $file)"
+              
+              # Add to list (comma-separated)
+              if [ -z "$CHANGED_SERVICES" ]; then
+                CHANGED_SERVICES="$SERVICE_NAME"
+              else
+                CHANGED_SERVICES="$CHANGED_SERVICES,$SERVICE_NAME"
+              fi
+            fi
+          done
+          
+          if [ -z "$CHANGED_SERVICES" ]; then
+            echo "No service compose files changed"
+          else
+            echo "Changed services: $CHANGED_SERVICES"
+          fi
+          
+          # Set output for next job
+          echo "services=$CHANGED_SERVICES" >> $GITHUB_OUTPUT
+  
+  deploy-services:
+    needs: detect-and-deploy
+    if: ${{ needs.detect-and-deploy.outputs.services != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-and-deploy.outputs.services == '' ? '[]' : format('[\"{0}\"]', replace(needs.detect-and-deploy.outputs.services, ',', '\",\"'))) }}
+    steps:
+      - name: Deploy service ${{ matrix.service }}
+        env:
+          # Construct secret name from service name
+          # e.g., hello -> PORTAINER_WEBHOOK_HELLO
+          SECRET_NAME: PORTAINER_WEBHOOK_${{ upper(matrix.service) }}
+          WEBHOOK_URL: ${{ secrets[format('PORTAINER_WEBHOOK_{0}', upper(matrix.service))] }}
+        run: |
+          echo "Deploying service: ${{ matrix.service }}"
+          echo "Looking for secret: $SECRET_NAME"
+          
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "❌ Secret '$SECRET_NAME' not found or empty"
+            echo "Please add webhook URL for ${{ matrix.service }} service to GitHub secrets"
+            echo "Expected secret name: PORTAINER_WEBHOOK_${{ upper(matrix.service) }}"
+            exit 1
+          fi
+          
+          echo "Triggering webhook for ${{ matrix.service }}..."
+          echo "Webhook URL: (hidden for security)"
+          
+          # Try webhook with retry logic
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES..."
+            
+            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+              -X POST \
+              -H "User-Agent: GitHub Actions (Portainer Deploy)" \
+              "$WEBHOOK_URL?action=redeploy")
+            
+            HTTP_STATUS=$(echo "$RESPONSE" | grep -o 'HTTP_STATUS:[0-9]*' | cut -d: -f2)
+            BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
+            
+            if [ "$HTTP_STATUS" = "204" ] || [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Successfully triggered redeploy for ${{ matrix.service }}"
+              break
+            elif [ $i -lt $MAX_RETRIES ]; then
+              echo "⚠️ Attempt $i failed (HTTP $HTTP_STATUS), retrying in ${RETRY_DELAY}s..."
+              echo "Error: $BODY"
+              sleep $RETRY_DELAY
+            else
+              echo "❌ All attempts failed for ${{ matrix.service }} (HTTP $HTTP_STATUS)"
+              echo "Error: $BODY"
+              echo ""
+              echo "Troubleshooting:"
+              echo "1. Check if webhook is enabled in Portainer UI"
+              echo "2. Verify the webhook URL in secret '$SECRET_NAME'"
+              echo "3. Ensure Portainer is accessible from GitHub Actions"
+              exit 1
+            fi
+          done
