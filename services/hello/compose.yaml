@@ -6,4 +6,4 @@
       ports:
         - "22222:80"
       environment:
-        - MESSAGE=✅ Portainer webhook triggered! Hello from lan-infra v5 (GitHub Actions auto-deploy)
+        - MESSAGE=✅ Cloudflare auth test successful! Hello from lan-infra
