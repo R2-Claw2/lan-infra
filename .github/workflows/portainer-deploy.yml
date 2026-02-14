@@ -31,9 +31,11 @@ jobs:
         env:
           PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
           PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
-          # ⚠️ IMPORTANT: When adding a new service, add its webhook secret here!
+          # ⚠️ LIMITATION: For each new service, you MUST:
+          #   1. Create a matching secret named PORTAINER_WEBHOOK_<SERVICE_NAME>
+          #   2. Add a corresponding env entry here that maps to that secret.
           # Example for 'home-assistant' service:
-          # PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
+          #   PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           node scripts/portainer-webhook-deploy.js
