@@ -57,7 +57,7 @@ node portainer-webhook-deploy.js  # Run deployment
 
 ### GitHub Actions Workflow
 - Triggers on changes to `services/**/compose.yaml`
-- Checks out repo with depth 2 (for git diff)
+- Checks out repo with full history (`fetch-depth: 0`) for git diff
 - Sets up Node.js 20
 - Runs the Node.js script
 

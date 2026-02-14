@@ -32,7 +32,7 @@ class PortainerWebhookDeploy {
       // Check if we have the from commit
       let hasFromCommit = '';
       try {
-        hasFromCommit = execSync(`git rev-parse --verify ${fromCommit}`, {
+        hasFromCommit = execSync('git', ['rev-parse', '--verify', fromCommit], {
           encoding: 'utf8',
           stdio: ['pipe', 'pipe', 'ignore']
         }).trim();
@@ -47,7 +47,7 @@ class PortainerWebhookDeploy {
       }
 
       // Try to get diff between the two commits
-      const diff = execSync(`git diff --name-only ${fromCommit} ${toCommit}`, {
+      const diff = execSync('git', ['diff', '--name-only', fromCommit, toCommit], {
         encoding: 'utf8',
         stdio: ['pipe', 'pipe', 'ignore']
       }).trim();
@@ -105,7 +105,8 @@ class PortainerWebhookDeploy {
     try {
       const url = new URL(webhookUrl);
       if (url.protocol !== 'https:') {
-        throw new Error(`Webhook URL for ${serviceName} must use HTTPS (got: ${webhookUrl})`);
+        // Don't leak full URL, just show protocol
+        throw new Error(`Webhook URL for ${serviceName} must use HTTPS (got: ${url.protocol}//...)`);
       }
       // Additional validation: ensure it looks like a Portainer webhook URL
       if (!url.pathname.includes('/api/stacks/webhooks/')) {
@@ -115,7 +116,8 @@ class PortainerWebhookDeploy {
       return webhookUrl;
     } catch (error) {
       if (error instanceof TypeError) {
-        throw new Error(`Invalid webhook URL for ${serviceName}: "${webhookUrl}" is not a valid URL`);
+        // Don't leak full URL in error message
+        throw new Error(`Invalid webhook URL for ${serviceName}: URL is malformed or not a valid HTTPS URL`);
       }
       throw error;
     }
@@ -127,12 +129,14 @@ class PortainerWebhookDeploy {
   async triggerWebhook(webhookUrl, serviceName, attempt = 1, maxAttempts = 3) {
     return new Promise((resolve, reject) => {
       const url = new URL(webhookUrl);
-      url.searchParams.set('action', 'redeploy');
+      // Note: Portainer webhooks don't need action=redeploy parameter
+      // The webhook URL itself contains the authentication token
+      // We're NOT adding any query parameters
 
       const options = {
         hostname: url.hostname,
         port: url.port || 443,
-        path: url.pathname + url.search,
+        path: url.pathname + url.search, // Keep existing query params if any
         method: 'POST',
         headers: {
           'User-Agent': 'GitHub Actions (Portainer Deploy)',
