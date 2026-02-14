@@ -8,38 +8,15 @@
 
 // Simple test without npm dependencies
 
-// Mock the PortainerWebhookDeploy class for testing
-// NOTE: This duplicates some logic from the main script for unit testing purposes.
-// In a real test suite, we would import and test the actual implementation.
-class MockPortainerWebhookDeploy {
-  constructor() {
-    this.servicesPath = 'services';
-    this.secretPrefix = 'PORTAINER_WEBHOOK_';
-  }
-
-  /**
-   * Extract service names from file paths
-   */
-  extractServiceNames(filePaths) {
-    const serviceNames = new Set();
-
-    for (const filePath of filePaths) {
-      // Match pattern: services/<service-name>/compose.yaml
-      const match = filePath.match(new RegExp(`^${this.servicesPath}/([^/]+)/compose\\.yaml$`));
-      if (match) {
-        serviceNames.add(match[1]);
-      }
-    }
-
-    return Array.from(serviceNames);
-  }
-}
+// Use the real PortainerWebhookDeploy class from the main script for testing
+// This ensures the tests exercise the actual implementation instead of a mock copy.
+const PortainerWebhookDeploy = require('./portainer-webhook-deploy');
 
 // Mock test - doesn't actually call webhooks
 async function runTests() {
   console.log('🧪 Testing PortainerWebhookDeploy class\n');
 
-  const deployer = new MockPortainerWebhookDeploy();
+  const deployer = new PortainerWebhookDeploy();
   let testFailures = 0;
 
   // Test 1: Extract service names

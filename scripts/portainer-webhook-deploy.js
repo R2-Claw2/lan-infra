@@ -22,19 +22,32 @@ class PortainerWebhookDeploy {
    */
   getChangedFiles() {
     try {
-      // First, check if we have a previous commit to diff against
-      const hasPreviousCommit = execSync('git rev-parse HEAD~1 2>/dev/null || echo ""', {
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore']
-      }).trim();
+      // Use environment variables for commit range if provided
+      // GitHub Actions provides GITHUB_BEFORE_SHA and GITHUB_SHA
+      const fromCommit = process.env.GITHUB_BEFORE_SHA || 'HEAD~1';
+      const toCommit = process.env.GITHUB_SHA || 'HEAD';
+      
+      console.log(`Checking for changed files between ${fromCommit} and ${toCommit}...`);
+      
+      // Check if we have the from commit
+      let hasFromCommit = '';
+      try {
+        hasFromCommit = execSync(`git rev-parse --verify ${fromCommit}`, {
+          encoding: 'utf8',
+          stdio: ['pipe', 'pipe', 'ignore']
+        }).trim();
+      } catch {
+        // If the command fails (e.g., no previous commit), treat as no from commit
+        hasFromCommit = '';
+      }
 
-      if (!hasPreviousCommit) {
-        console.log('⚠️ No previous commit found (might be initial commit)');
+      if (!hasFromCommit) {
+        console.log(`⚠️ Commit ${fromCommit} not found (might be initial commit or shallow clone)`);
         return null; // Cannot determine what changed
       }
 
-      // Try to get diff between current and previous commit
-      const diff = execSync('git diff --name-only HEAD~1 HEAD', {
+      // Try to get diff between the two commits
+      const diff = execSync(`git diff --name-only ${fromCommit} ${toCommit}`, {
         encoding: 'utf8',
         stdio: ['pipe', 'pipe', 'ignore']
       }).trim();
@@ -88,17 +101,24 @@ class PortainerWebhookDeploy {
       );
     }
 
-    if (!webhookUrl.startsWith('https://')) {
-      throw new Error(`Invalid webhook URL for ${serviceName}. Must be HTTPS.`);
+    // Validate URL format using URL constructor (catches more errors than startsWith)
+    try {
+      const url = new URL(webhookUrl);
+      if (url.protocol !== 'https:') {
+        throw new Error(`Webhook URL for ${serviceName} must use HTTPS (got: ${webhookUrl})`);
+      }
+      // Additional validation: ensure it looks like a Portainer webhook URL
+      if (!url.pathname.includes('/api/stacks/webhooks/')) {
+        console.warn(`⚠️ Webhook URL for ${serviceName} doesn't look like a standard Portainer webhook URL`);
+        console.warn(`   Expected format: https://portainer.example.com/api/stacks/webhooks/<token>`);
+      }
+      return webhookUrl;
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(`Invalid webhook URL for ${serviceName}: "${webhookUrl}" is not a valid URL`);
+      }
+      throw error;
     }
-
-    // Basic validation that it looks like a Portainer webhook URL
-    if (!webhookUrl.includes('/api/stacks/webhooks/')) {
-      console.warn(`⚠️ Webhook URL for ${serviceName} doesn't look like a standard Portainer webhook URL`);
-      console.warn(`   Expected format: https://portainer.example.com/api/stacks/webhooks/<token>`);
-    }
-
-    return webhookUrl;
   }
 
   /**

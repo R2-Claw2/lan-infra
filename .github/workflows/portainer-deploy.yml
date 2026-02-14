@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Need previous commit for diff
+          fetch-depth: 0  # Full history to ensure we have both SHAs
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,5 +29,7 @@ jobs:
           # ⚠️ IMPORTANT: When adding a new service, add its webhook secret here!
           # Example for 'home-assistant' service:
           # PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
+          GITHUB_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           node scripts/portainer-webhook-deploy.js
