@@ -31,6 +31,11 @@ jobs:
       - name: Run Portainer deploy script
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
+          # Cloudflare Access Service Token (for portainer.diegoa.ca authentication)
+          CF_SERVICE_TOKEN_CLIENT_ID: ${{ secrets.CF_SERVICE_TOKEN_CLIENT_ID }}
+          CF_SERVICE_TOKEN_CLIENT_SECRET: ${{ secrets.CF_SERVICE_TOKEN_CLIENT_SECRET }}
+          
+          # Portainer webhook URLs
           PORTAINER_WEBHOOK_ADGUARD: ${{ secrets.PORTAINER_WEBHOOK_ADGUARD }}
           PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
           PORTAINER_WEBHOOK_DISPATCHARR: ${{ secrets.PORTAINER_WEBHOOK_DISPATCHARR }}
