@@ -100,8 +100,8 @@ The script includes:
 ## Security
 
 - Webhook URLs stored in GitHub Secrets
-- HTTPS required for webhook URLs
-- Basic webhook URL format validation (warns if doesn't look like Portainer webhook)
+- Use HTTPS for webhook URLs (recommended)
+- Ensure webhook URLs are correctly copied from Portainer (no automatic URL validation)
 - Reduced logging verbosity (doesn't log full URLs)
 - No Portainer API keys needed
 - Each service has separate webhook token
