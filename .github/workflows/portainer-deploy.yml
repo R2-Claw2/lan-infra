@@ -2,7 +2,7 @@ name: Portainer Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, chore/portainer-webhook-node-script ]
     paths:
       - 'services/**/compose.yaml'
       - '.github/workflows/portainer-deploy.yml'
