@@ -26,6 +26,8 @@ jobs:
         env:
           PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
           PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
-          # Add more secrets as needed for other services
+          # ⚠️ IMPORTANT: When adding a new service, add its webhook secret here!
+          # Example for 'home-assistant' service:
+          # PORTAINER_WEBHOOK_HOME_ASSISTANT: ${{ secrets.PORTAINER_WEBHOOK_HOME_ASSISTANT }}
         run: |
           node scripts/portainer-webhook-deploy.js

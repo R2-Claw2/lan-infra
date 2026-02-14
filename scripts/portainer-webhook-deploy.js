@@ -79,7 +79,11 @@ class PortainerWebhookDeploy {
     const webhookUrl = process.env[secretName];
 
     if (!webhookUrl) {
-      throw new Error(`Secret ${secretName} not found. Add webhook URL to GitHub secrets.`);
+      throw new Error(`Secret ${secretName} not found for service '${serviceName}'. 
+1. Enable webhook in Portainer UI for '${serviceName}' service
+2. Copy webhook URL from Portainer
+3. Add to GitHub secrets with name: ${secretName}
+4. Update .github/workflows/portainer-deploy.yml to pass the secret as environment variable`);
     }
 
     if (!webhookUrl.startsWith('https://')) {
