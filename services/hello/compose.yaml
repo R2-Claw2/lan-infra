@@ -6,4 +6,4 @@
       ports:
         - "22222:80"
       environment:
-        - MESSAGE=hello from lan-infra v3
+        - MESSAGE=hello from lan-infra v4 (testing Portainer webhook)

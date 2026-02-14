@@ -72,22 +72,24 @@ class PortainerWebhookDeploy {
             }, 2000);
           } else {
             console.error(`❌ [${serviceName}] Failed after ${maxAttempts} attempts (HTTP ${res.statusCode})`);
-            reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+            // Don't include response body in error to avoid leaking sensitive info
+            reject(new Error(`HTTP ${res.statusCode}`));
           }
         });
       });
 
       req.on('error', (error) => {
         if (attempt < maxAttempts) {
-          console.log(`🔄 [${serviceName}] Network error, retrying: ${error.message}`);
+          console.log(`🔄 [${serviceName}] Network error, retrying...`);
           setTimeout(() => {
             this.triggerWebhook(webhookUrl, serviceName, attempt + 1, maxAttempts)
               .then(resolve)
               .catch(reject);
           }, 2000);
         } else {
-          console.error(`❌ [${serviceName}] Network error after ${maxAttempts} attempts: ${error.message}`);
-          reject(error);
+          console.error(`❌ [${serviceName}] Network error after ${maxAttempts} attempts`);
+          // Don't include error details to avoid leaking hostname/URL
+          reject(new Error('Network error'));
         }
       });
 
