@@ -263,6 +263,18 @@ class PortainerWebhookDeploy {
 if (require.main === module) {
   const deployer = new PortainerWebhookDeploy();
   
+  // Handle process signals
+  let isExiting = false;
+  const handleExit = (signal) => {
+    if (isExiting) return;
+    isExiting = true;
+    console.log(`\n⚠️ Received ${signal}, shutting down...`);
+    process.exit(1);
+  };
+  
+  process.on('SIGINT', () => handleExit('SIGINT'));
+  process.on('SIGTERM', () => handleExit('SIGTERM'));
+  
   deployer.deploy()
     .then(result => {
       if (result.skipped) {
