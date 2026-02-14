@@ -171,8 +171,9 @@ class PortainerWebhookDeploy {
    * Main deployment logic
    */
   async deploy() {
-    console.log('🚀 Portainer Webhook Deploy Script');
-    console.log('====================================\n');
+    try {
+      console.log('🚀 Portainer Webhook Deploy Script');
+      console.log('====================================\n');
 
     // Get changed files
     const changedFiles = this.getChangedFiles();
@@ -240,6 +241,18 @@ class PortainerWebhookDeploy {
       results,
       skipped: false
     };
+    } catch (error) {
+      console.error('💥 Unhandled error in deploy():', error.message);
+      console.error('Stack:', error.stack);
+      return {
+        success: false,
+        deployed: [],
+        failed: [],
+        results: [],
+        skipped: false,
+        error: error.message
+      };
+    }
   }
 }
 
@@ -257,12 +270,15 @@ if (require.main === module) {
         process.exit(1);
       } else if (result.deployed.length > 0) {
         console.log('\n🎉 All deployments successful!');
+        process.exit(0);
       } else {
         console.log('\nℹ️ No services needed deployment.');
+        process.exit(0);
       }
     })
     .catch(error => {
       console.error('\n💥 Fatal error:', error.message);
+      console.error('Stack:', error.stack);
       process.exit(1);
     });
 }
