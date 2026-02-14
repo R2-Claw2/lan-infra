@@ -80,7 +80,7 @@ node portainer-webhook-deploy.js  # Run deployment
 cd scripts
 
 # Run tests
-node test-portainer-webhook.js
+node test-portainer-webhook.js  # Run basic tests
 
 # Simulate GitHub Actions environment
 export PORTAINER_WEBHOOK_HELLO=your_webhook_url

@@ -7,8 +7,6 @@
  * Designed to be called from GitHub Actions with minimal YAML.
  */
 
-const fs = require('fs');
-const path = require('path');
 const { execSync } = require('child_process');
 const https = require('https');
 
@@ -76,7 +74,8 @@ class PortainerWebhookDeploy {
    * Get webhook URL from GitHub secrets (passed as env vars)
    */
   getWebhookUrl(serviceName) {
-    const secretName = `${this.secretPrefix}${serviceName.toUpperCase()}`;
+    const normalizedServiceName = serviceName.replace(/-/g, '_').toUpperCase();
+    const secretName = `${this.secretPrefix}${normalizedServiceName}`;
     const webhookUrl = process.env[secretName];
 
     if (!webhookUrl) {
@@ -109,7 +108,7 @@ class PortainerWebhookDeploy {
         timeout: 10000, // 10 second timeout
       };
 
-      console.log(`[${serviceName}] Attempt ${attempt}/${maxAttempts}: ${url.hostname}${url.pathname}`);
+      console.log(`[${serviceName}] Attempt ${attempt}/${maxAttempts}: triggering Portainer webhook`);
 
       const req = https.request(options, (res) => {
         let data = '';
@@ -175,72 +174,72 @@ class PortainerWebhookDeploy {
       console.log('🚀 Portainer Webhook Deploy Script');
       console.log('====================================\n');
 
-    // Get changed files
-    const changedFiles = this.getChangedFiles();
+      // Get changed files
+      const changedFiles = this.getChangedFiles();
     
-    if (changedFiles === null) {
-      console.log('❓ Cannot determine what changed (force push, squash merge, or initial commit)');
-      console.log('⚠️ Skipping deployment to avoid redeploying all services unnecessarily.');
-      console.log('ℹ️ Normal pushes with linear history will work correctly.');
-      return { 
-        success: true, 
-        deployed: [],
-        skipped: true,
-        reason: 'Cannot determine changed files (non-linear git history)'
-      };
-    }
-
-    console.log(`Changed files detected: ${changedFiles.length}`);
-    if (changedFiles.length > 0) {
-      console.log(changedFiles.map(f => `  - ${f}`).join('\n'));
-    }
-
-    // Extract service names
-    const serviceNames = this.extractServiceNames(changedFiles);
-    console.log(`\nServices to deploy: ${serviceNames.length}`);
-    if (serviceNames.length === 0) {
-      console.log('No service compose files changed.');
-      return { success: true, deployed: [], skipped: false };
-    }
-    console.log(serviceNames.map(s => `  - ${s}`).join('\n'));
-
-    // Deploy each service
-    const results = [];
-    for (const serviceName of serviceNames) {
-      try {
-        console.log(`\n--- Deploying ${serviceName} ---`);
-        const webhookUrl = this.getWebhookUrl(serviceName);
-        await this.triggerWebhook(webhookUrl, serviceName);
-        results.push({ service: serviceName, success: true });
-      } catch (error) {
-        console.error(`Failed to deploy ${serviceName}: ${error.message}`);
-        results.push({ service: serviceName, success: false, error: error.message });
+      if (changedFiles === null) {
+        console.log('❓ Cannot determine what changed (force push, squash merge, or initial commit)');
+        console.log('⚠️ Skipping deployment to avoid redeploying all services unnecessarily.');
+        console.log('ℹ️ Normal pushes with linear history will work correctly.');
+        return { 
+          success: true, 
+          deployed: [],
+          skipped: true,
+          reason: 'Cannot determine changed files (non-linear git history)'
+        };
       }
-    }
 
-    // Summary
-    console.log('\n📊 Deployment Summary');
-    console.log('====================');
-    const successful = results.filter(r => r.success);
-    const failed = results.filter(r => !r.success);
+      console.log(`Changed files detected: ${changedFiles.length}`);
+      if (changedFiles.length > 0) {
+        console.log(changedFiles.map(f => `  - ${f}`).join('\n'));
+      }
 
-    if (successful.length > 0) {
-      console.log(`✅ Successful: ${successful.map(r => r.service).join(', ')}`);
-    }
-    if (failed.length > 0) {
-      console.log(`❌ Failed: ${failed.map(r => r.service).join(', ')}`);
-      console.log('\nErrors:');
-      failed.forEach(r => console.log(`  - ${r.service}: ${r.error}`));
-    }
+      // Extract service names
+      const serviceNames = this.extractServiceNames(changedFiles);
+      console.log(`\nServices to deploy: ${serviceNames.length}`);
+      if (serviceNames.length === 0) {
+        console.log('No service compose files changed.');
+        return { success: true, deployed: [], skipped: false };
+      }
+      console.log(serviceNames.map(s => `  - ${s}`).join('\n'));
 
-    const allSuccess = failed.length === 0;
-    return {
-      success: allSuccess,
-      deployed: successful.map(r => r.service),
-      failed: failed.map(r => r.service),
-      results,
-      skipped: false
-    };
+      // Deploy each service
+      const results = [];
+      for (const serviceName of serviceNames) {
+        try {
+          console.log(`\n--- Deploying ${serviceName} ---`);
+          const webhookUrl = this.getWebhookUrl(serviceName);
+          await this.triggerWebhook(webhookUrl, serviceName);
+          results.push({ service: serviceName, success: true });
+        } catch (error) {
+          console.error(`Failed to deploy ${serviceName}: ${error.message}`);
+          results.push({ service: serviceName, success: false, error: error.message });
+        }
+      }
+
+      // Summary
+      console.log('\n📊 Deployment Summary');
+      console.log('====================');
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+
+      if (successful.length > 0) {
+        console.log(`✅ Successful: ${successful.map(r => r.service).join(', ')}`);
+      }
+      if (failed.length > 0) {
+        console.log(`❌ Failed: ${failed.map(r => r.service).join(', ')}`);
+        console.log('\nErrors:');
+        failed.forEach(r => console.log(`  - ${r.service}: ${r.error}`));
+      }
+
+      const allSuccess = failed.length === 0;
+      return {
+        success: allSuccess,
+        deployed: successful.map(r => r.service),
+        failed: failed.map(r => r.service),
+        results,
+        skipped: false
+      };
     } catch (error) {
       console.error('💥 Unhandled error in deploy():', error.message);
       console.error('Stack:', error.stack);

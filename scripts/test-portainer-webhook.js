@@ -6,8 +6,6 @@
  */
 
 // Simple test without npm dependencies
-const fs = require('fs');
-const path = require('path');
 
 // Mock the PortainerWebhookDeploy class for testing
 class MockPortainerWebhookDeploy {
@@ -66,7 +64,7 @@ async function runTests() {
   ];
 
   for (const test of testCases) {
-    const secretName = `PORTAINER_WEBHOOK_${test.input.toUpperCase()}`;
+    const secretName = `PORTAINER_WEBHOOK_${test.input.replace(/-/g, '_').toUpperCase()}`;
     console.log(`  ${test.input} -> ${secretName}`);
     if (secretName === test.expected) {
       console.log(`    ✅ Correct`);

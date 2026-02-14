@@ -2,7 +2,7 @@ name: Test Portainer Script
 
 on:
   push:
-    branches: [ main, chore/portainer-webhook-node-script ]
+    branches: [ main ]
     paths:
       - 'scripts/**'
       - '.github/workflows/test-portainer-script.yml'

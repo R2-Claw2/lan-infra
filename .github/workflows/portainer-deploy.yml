@@ -24,9 +24,8 @@ jobs:
 
       - name: Run Portainer deploy script
         env:
-          # Secrets are automatically mapped to env vars by GitHub Actions
-          # PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
-          # PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
+          PORTAINER_WEBHOOK_HELLO: ${{ secrets.PORTAINER_WEBHOOK_HELLO }}
+          PORTAINER_WEBHOOK_CLOUDFLARED: ${{ secrets.PORTAINER_WEBHOOK_CLOUDFLARED }}
           # Add more secrets as needed for other services
         run: |
           node scripts/portainer-webhook-deploy.js
