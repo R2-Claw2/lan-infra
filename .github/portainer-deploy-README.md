@@ -57,12 +57,12 @@ node portainer-webhook-deploy.js  # Run deployment
 
 ### GitHub Actions Workflow
 - Triggers on changes to `services/**/compose.yaml`
-- Checks out repo with full history (`fetch-depth: 0`) for git diff
+- Checks out repo with full history (`fetch-depth: 0`) to support change detection via `tj-actions/changed-files`
 - Sets up Node.js 20
 - Runs the Node.js script
 
 ### Node.js Script
-1. **Detects changed files** using `git diff`
+1. **Detects changed files** from the `ALL_CHANGED_FILES` environment variable (populated by `tj-actions/changed-files`)
 2. **Extracts service names** from paths
 3. **Gets webhook URLs** from environment variables (GitHub secrets)
 4. **Triggers webhooks** with retry logic (3 attempts, 5s delay)
