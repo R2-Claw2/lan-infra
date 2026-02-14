@@ -49,7 +49,7 @@ export PORTAINER_WEBHOOK_HELLO=https://portainer.diegoa.ca/api/stacks/webhooks/.
 
 # Run locally
 cd scripts
-npm test  # Run basic tests
+node test-portainer-webhook.js  # Run basic tests
 node portainer-webhook-deploy.js  # Run deployment
 ```
 
