@@ -50,9 +50,8 @@ class PortainerWebhookDeploy {
         method: 'POST',
         headers: {
           'User-Agent': 'GitHub Actions (Portainer Deploy)',
-          // Cloudflare headers temporarily removed - policy needs to be set to "Bypass" not "Allow"
-          // 'CF-Access-Client-Id': process.env.CF_SERVICE_TOKEN_CLIENT_ID || '',
-          // 'CF-Access-Client-Secret': process.env.CF_SERVICE_TOKEN_CLIENT_SECRET || '',
+          'CF-Access-Client-Id': process.env.CF_SERVICE_TOKEN_CLIENT_ID || '',
+          'CF-Access-Client-Secret': process.env.CF_SERVICE_TOKEN_CLIENT_SECRET || '',
         },
         timeout: 10000,
       };

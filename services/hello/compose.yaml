@@ -6,4 +6,4 @@
       ports:
         - "22222:80"
       environment:
-        - MESSAGE=✅ Cloudflare auth test successful! Hello from lan-infra
+        - MESSAGE=✅ Cloudflare auth FIXED! Webhook test successful! Hello from lan-infra
