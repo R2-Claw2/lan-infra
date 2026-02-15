@@ -5,7 +5,7 @@ volumes:
 
 services:
   nordvpn:
-    image: qmcgaw/gluetun:latest@sha256:ad2b65b131ca4faa4882c91d3672aeb72a0c480f8f33d5854f90d8b683da14e6
+    image: qmcgaw/gluetun:v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab
     container_name: nordvpn
     hostname: nordvpn
     restart: unless-stopped
